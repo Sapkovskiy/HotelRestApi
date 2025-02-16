@@ -37,14 +37,14 @@ public class HotelDto {
 
     @Schema(description = "Адрес отеля")
     @NotNull(message = "Адрес обязателен")
-    private Address address;
+    private Address addressDto;
 
     @Schema(description = "Контакты отеля")
     @NotNull(message = "Контактные данные обязательны")
-    private Contact contacts;
+    private Contact contactsDto;
 
     @Schema(description = "Время заселения и выселения")
-    private ArrivalTime arrivalTime;
+    private ArrivalTime arrivalTimeDto;
 
     @Schema(description = "Список удобств", example = "[\"WiFi\", \"Parking\"]")
     private Set<String> amenities;

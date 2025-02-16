@@ -2,10 +2,12 @@ package org.hotels.service;
 
 import org.hotels.dto.HotelBriefDto;
 import org.hotels.exception.HotelNotFoundException;
+import org.hotels.mapper.HotelMapper;
 import org.hotels.model.Hotel;
 import org.hotels.repository.HotelRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,18 +27,10 @@ public class HotelService {
 
     public List<HotelBriefDto> getAllHotelsBrief() {
         List<Hotel> hotels = hotelRepository.findAll();
+        HotelMapper mapper = Mappers.getMapper(HotelMapper.class);
 
         return hotels.stream()
-                .map(hotel -> new HotelBriefDto(
-                        hotel.getId(),
-                        hotel.getName(),
-                        hotel.getDescription(),
-                        hotel.getAddress().getHouseNumber() + " " + hotel.getAddress().getStreet() + ", " +
-                        hotel.getAddress().getCity() + ", " +
-                        hotel.getAddress().getPostCode() + ", " +
-                        hotel.getAddress().getCounty(),
-                        hotel.getContacts().getPhone()
-                ))
+                .map(mapper::mapHotelToBriefDto)
                 .collect(Collectors.toList());
     }
 
@@ -47,14 +41,9 @@ public class HotelService {
 
     public HotelBriefDto saveHotel(Hotel hotel) {
         Hotel save = hotelRepository.save(hotel);
-        HotelBriefDto dto = new HotelBriefDto();
-        dto.setId(save.getId());
-        dto.setName(save.getName());
-        dto.setDescription(save.getDescription());
-        dto.setAddress(save.getAddress().getHouseNumber() + " " + save.getAddress().getStreet() +
-                       ", " + save.getAddress().getCity() + ", " + save.getAddress().getPostCode() + ", " + save.getAddress().getCounty());
-        dto.setPhone(save.getContacts().getPhone());
-        return dto;
+        HotelMapper mapper = Mappers.getMapper(HotelMapper.class);
+
+        return mapper.mapHotelToBriefDto(save);
     }
 
     @Transactional
@@ -68,8 +57,10 @@ public class HotelService {
         List<Hotel> hotels = getAllHotels();
         return switch (param.toLowerCase()) {
             case "brand" -> hotels.stream().collect(Collectors.groupingBy(Hotel::getBrand, Collectors.counting()));
-            case "city" -> hotels.stream().collect(Collectors.groupingBy(h -> h.getAddress().getCity(), Collectors.counting()));
-            case "county" -> hotels.stream().collect(Collectors.groupingBy(h -> h.getAddress().getCounty(), Collectors.counting()));
+            case "city" ->
+                    hotels.stream().collect(Collectors.groupingBy(h -> h.getAddress().getCity(), Collectors.counting()));
+            case "county" ->
+                    hotels.stream().collect(Collectors.groupingBy(h -> h.getAddress().getCounty(), Collectors.counting()));
             case "amenities" -> hotels.stream()
                     .flatMap(h -> h.getAmenities().stream())
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
